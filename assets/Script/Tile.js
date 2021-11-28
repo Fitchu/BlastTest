@@ -1,3 +1,4 @@
+var config = require("config");
 cc.Class({
   extends: cc.Component,
 
@@ -6,14 +7,16 @@ cc.Class({
     var self = this;
     var url = "Tile/Red";
     cc.resources.load(url, cc.SpriteFrame, function (err, spriteFrame) {
-      spriteFrame.width = 45;
-      spriteFrame.height = 45;
       self.node.getComponent(cc.Sprite).spriteFrame = spriteFrame;
     });
 
-    this.node.setScale(0.23, 0.23);
+    this.node.setScale(config.tileScaleSize);
     this.node.on(cc.Node.EventType.TOUCH_END, () => {
-      cc.log("click");
+      cc.log(
+        "coordinate: ",
+        Math.abs(this.node.x / 40),
+        Math.abs(this.node.y / 45)
+      );
     });
   },
   start() {},

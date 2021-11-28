@@ -12,7 +12,10 @@ cc.Class({
       displayName: "Area height",
       type: cc.Integer,
     },
-    Tile_Prefab: cc.Prefab,
+    Tile_Prefab: {
+      default: null,
+      type: cc.Prefab,
+    },
   },
   start() {
     this.tiles = new Array(this.N);
@@ -26,7 +29,7 @@ cc.Class({
       for (let y = 0; y < this.M; y++) {
         this.tiles[x][y] = cc.instantiate(this.Tile_Prefab);
         this.node.addChild(this.tiles[x][y]);
-        this.tiles[x][y].setPosition(x * 45, y * -45);
+        this.tiles[x][y].setPosition(x * 40, y * -45);
       }
     }
   },
