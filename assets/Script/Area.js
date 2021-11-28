@@ -1,17 +1,33 @@
 cc.Class({
   extends: cc.Component,
-  
+
   properties: {
-    Tile_Prefab:cc.Prefab,
+    N: {
+      default: 5,
+      displayName: "Area width",
+      type: cc.Integer,
+    },
+    M: {
+      default: 5,
+      displayName: "Area height",
+      type: cc.Integer,
+    },
+    Tile_Prefab: cc.Prefab,
   },
-  onLoad() {
-    cc.log("load");
+  start() {
+    this.tiles = new Array(this.N);
+    for (let x = 0; x < this.N; x++) {
+      this.tiles[x] = new Array(this.M);
+    }
     this.Spawn();
   },
   Spawn() {
-    let tile = cc.instantiate(this.Tile_Prefab)
-    tile.parent = this.node.parent;
-    tile.setPosition(this.node.getPosition());
-    cc.log("test")
-  }
+    for (let x = 0; x < this.N; x++) {
+      for (let y = 0; y < this.M; y++) {
+        this.tiles[x][y] = cc.instantiate(this.Tile_Prefab);
+        this.node.addChild(this.tiles[x][y]);
+        this.tiles[x][y].setPosition(x * 45, y * -45);
+      }
+    }
+  },
 });
