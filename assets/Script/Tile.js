@@ -4,7 +4,8 @@ cc.Class({
   properties: {},
   onLoad() {
     this.node.on(cc.Node.EventType.TOUCH_END, () => {
-      this.node.dispatchEvent(new cc.Event.EventCustom("click", true));
+      const event = new cc.Event.EventCustom("click", true);
+      this.node.dispatchEvent(event);
     });
   },
   start() {},

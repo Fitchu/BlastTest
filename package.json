@@ -1,0 +1,9 @@
+{
+  "name": "my-game",
+  "version": "0.0.1",
+  "description": "Blast game",
+  "author": "Cocos Creator",
+  "scripts": {
+    "test": "mocha 'test/**/*.js'"
+  }
+}

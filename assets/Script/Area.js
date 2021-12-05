@@ -1,6 +1,8 @@
 var config = require("config");
-
+var tests = require("./testconf");
+import c from "config";
 import Tiles from "./Models/Tiles";
+import Renderer from "./Models/Renderer";
 
 cc.Class({
   extends: cc.Component,
@@ -26,6 +28,11 @@ cc.Class({
       type: cc.Integer,
       displayName: "(K) Min. tiles in the group",
     },
+    totalMixCount: {
+      default: 2,
+      type: cc.Integer,
+      displayName: "(S) Mixing tiles count",
+    },
     Tile_Prefabs: {
       type: [cc.Prefab],
       default: [],
@@ -35,7 +42,7 @@ cc.Class({
       default: [],
       serializable: false,
     },
-    tiles: {
+    _tiles: {
       type: Tiles,
       default: null,
       serializable: false,
@@ -47,47 +54,67 @@ cc.Class({
   },
   start() {
     this.setRandomTiles();
-    /// НАДО СОЗДАТЬ КЛАСС Renderer и функцию мапинга для функций рендеринга
-    this.tiles = new Tiles(
+    const renderer = new Renderer(this, {
+      createElementCallback: this.createNodeChild,
+      renderElementCallback: (child, position) => {
+        if (position) {
+          const { x, y } = position;
+          child.setPosition(x * config.tileWidth, y * config.tileHeight);
+          cc.log(child);
+        }
+        this.node.addChild(child);
+      },
+      destroyElementCallback: this.destroyNode,
+      moveElementCallback: this.moveNode,
+      dispatchEventCallback: (event) => this.node.dispatchEvent(event),
+    });
+    this._tiles = new Tiles(
       this.areaWidth,
       this.areaHeight,
       this.minTilesInGroup,
-      this
+      this.totalMixCount,
+      renderer
     );
   },
+  moveNode(node, position) {
+    const { x, y } = position;
+    cc.tween(node)
+      .to(0.75, {
+        position: cc.v2(x * config.tileWidth, y * config.tileHeight),
+      })
+      .start();
+  },
+  destroyNode(node) {
+    cc.tween(node)
+      .to(0.3, {
+        scale: 0,
+        position: cc.v2(node.x, node.y),
+      })
+      .call(() => {
+        this.node.removeChild(node);
+      })
+      .start();
+  },
+
   createTest(x, y, test, withoutRendering = false) {
     const nodeChild = cc.instantiate(this.Tile_Prefabs[test]);
     nodeChild.setScale(config.tileScaleSize);
     if (!withoutRendering) this.renderNode(x, y, nodeChild);
     return nodeChild;
   },
-  createNodeChild(x, y, withoutRendering = false) {
+  createNodeChild() {
     const nodeChild = cc.instantiate(
       this._chooseTiles[this.getRandomNumber(this.colorsAmount)]
     );
     nodeChild.setScale(config.tileScaleSize);
-    if (!withoutRendering) this.renderNode(x, y, nodeChild);
     return nodeChild;
-  },
-
-  renderNode(x, y, nodeChild) {
-    nodeChild.setPosition(x * config.tileWidth, y * config.tileHeight);
-    this.node.addChild(nodeChild);
   },
 
   handleClick(event) {
     const x = Math.abs(event.target.x / config.tileWidth);
     const y = Math.abs(event.target.y / config.tileHeight);
-
-    const renderer = {
-      setPosition: (node, x, y) => {
-        node.setPosition(x * config.tileWidth, y * config.tileHeight);
-      },
-      addChildToNode: (child) => {
-        this.node.addChild(child);
-      },
-    };
-    this.tiles
+    event.stopPropagation();
+    this._tiles
       .determineTilesGroup(x, y, event.target.name)
       .destroyTilesGroup()
       .displaceTiles();
