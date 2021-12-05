@@ -840,13 +840,13 @@
       "__id__": 18
     },
     "component": "",
-    "_componentId": "5514f2fm61Fhr+G0WSW+z6M",
+    "_componentId": "d3255sQKw9FdqA83IUUPlhz",
     "handler": "loadGame",
     "customEventData": ""
   },
   {
     "__type__": "cc.Node",
-    "_name": "LvlManager",
+    "_name": "SceneManager",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -907,14 +907,14 @@
     "_id": "5dOjThHYxFPqGc+uCuQb1o"
   },
   {
-    "__type__": "5514f2fm61Fhr+G0WSW+z6M",
+    "__type__": "d3255sQKw9FdqA83IUUPlhz",
     "_name": "",
     "_objFlags": 0,
     "node": {
       "__id__": 18
     },
     "_enabled": true,
-    "_id": "d0utJBI0BPpb4C0Hzy0WQn"
+    "_id": "82JGK/vnBE1b4hgpI/DohS"
   },
   {
     "__type__": "cc.Canvas",

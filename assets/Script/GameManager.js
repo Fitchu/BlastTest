@@ -32,9 +32,14 @@ cc.Class({
       default: 0,
       serializable: false,
     },
+    _sceneManager: {
+      type: cc.Node,
+      default: null,
+    },
   },
   onLoad() {
-    this.node.on("scoreUp", this.handleScorUp, this);
+    this.node.on("scoreUp", this.handleScoreUp, this);
+    this._sceneManager = cc.find("SceneManager").getComponent("SceneManager");
   },
 
   start() {
@@ -42,10 +47,7 @@ cc.Class({
     this._countMove = this.totalMove;
     this.moveLabel.string = this.totalMove;
   },
-  onDestroy() {
-    this.node.off(cc.Node.EventType.TOUCH_END);
-  },
-  handleScorUp(event) {
+  handleScoreUp(event) {
     event.stopPropagation();
     const score = event.getUserData();
     this._countScore += score.count * 10;
@@ -53,21 +55,13 @@ cc.Class({
     this.scoreLabel.string = this._countScore;
     this.moveLabel.string = --this._countMove;
 
-    if (this._countScore >= this.totalScrore && this._countMove >= 0) {
-      this.gameOver(this._countScore, this._countMove, true);
-    } else if (this._countScore < this.totalScrore && this._countMove === 0) {
-      this.gameOver(this._countScore, this._countMove, false);
-    }
+    if (this._countScore < this.totalScrore && this._countMove >= 0) return;
+    this._sceneManager.handleGameOver(
+      this._countScore,
+      this._countScore >= this.totalScrore
+    );
   },
   fillBar(value) {
     this.barSprite.fillRange = value;
-  },
-  gameOver(scores, moves, resultGame) {
-    const event = new cc.Event.EventCustom("gameOver", true);
-    event.setUserData({ scores, moves, resultGame });
-    this.node.dispatchEvent(event);
-  },
-  onDestroy() {
-    this.node.off("scoreUp", this.handleScorUp, this);
   },
 });

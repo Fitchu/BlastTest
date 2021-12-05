@@ -60,7 +60,6 @@ cc.Class({
         if (position) {
           const { x, y } = position;
           child.setPosition(x * config.tileWidth, y * config.tileHeight);
-          cc.log(child);
         }
         this.node.addChild(child);
       },
