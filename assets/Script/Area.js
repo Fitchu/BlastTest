@@ -1,6 +1,4 @@
-var config = require("config");
-var tests = require("./testconf");
-import c from "config";
+const config = require("config");
 import Tiles from "./Models/Tiles";
 import Renderer from "./Models/Renderer";
 
@@ -62,10 +60,17 @@ cc.Class({
       default: null,
       serializable: false,
     },
+    _booster: {
+      default: "",
+    },
   },
 
   onLoad() {
     this.node.on("click", this.handleClick, this);
+    this.node.width = this.areaWidth * config.tileWidth + 25;
+    this.node.height = this.areaHeight * config.tileHeight + 25;
+    this.node.anchorX = (config.tileWidth + 25) / 2 / this.node.width;
+    this.node.anchorY = (config.tileHeight + 25) / 2 / this.node.height;
   },
   start() {
     this.setRandomTiles();
@@ -115,12 +120,6 @@ cc.Class({
       .start();
   },
 
-  createTest(x, y, test, withoutRendering = false) {
-    const nodeChild = cc.instantiate(this.tilePrefabs[test]);
-    nodeChild.setScale(config.tileScaleSize);
-    if (!withoutRendering) this.renderNode(x, y, nodeChild);
-    return nodeChild;
-  },
   createNodeChild(isSuper) {
     const nodeChild = isSuper
       ? cc.instantiate(this.superTile)
@@ -135,10 +134,37 @@ cc.Class({
     const x = Math.abs(event.target.x / config.tileWidth);
     const y = Math.abs(event.target.y / config.tileHeight);
     event.stopPropagation();
-    this._tiles
-      .determineTilesGroup(x, y, event.target.name)
-      .destroyTilesGroup()
-      .displaceTiles();
+
+    if (this._booster === "teleport") {
+      if (!this._source) {
+        this._source = { tile: event.target, position: { x, y } };
+        this._source.tile.opacity = 128;
+      } else {
+        this.swapTiles(this._source, {
+          tile: event.target,
+          position: { x, y },
+        });
+        this._booster = "";
+        this._source = null;
+      }
+    } else {
+      this._tiles[this.getDetermineMethodName()](x, y, event.target.name)
+        .destroyTilesGroup(this._booster === "bomb")
+        .displaceTiles();
+      this._booster = "";
+    }
+  },
+
+  swapTiles(source, destination) {
+    source.tile.opacity = 255;
+    this._tiles.set(source.position.x, source.position.y, destination.tile);
+    this._tiles.set(
+      destination.position.x,
+      destination.position.y,
+      source.tile
+    );
+    this.moveNode(source.tile, destination.position);
+    this.moveNode(destination.tile, source.position);
   },
 
   setRandomTiles() {
@@ -149,8 +175,14 @@ cc.Class({
       );
     }
   },
+  getDetermineMethodName() {
+    return `determineTilesGroup${this._booster === "bomb" ? "ByRadius" : ""}`;
+  },
   getRandomNumber(number) {
     return Math.floor(Math.random() * number);
+  },
+  setBooster(event, name) {
+    this._booster = name;
   },
   onDestroy() {
     this.node.off("click", this.handleClick, this);

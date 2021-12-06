@@ -87,12 +87,9 @@ class Tiles {
 
   mixTiles() {
     let mixCount = 0;
-    cc.log("max: ", this._maxMixes);
-    console.log(!this.hasTilesGroup() && mixCount < this._maxMixes);
     while (!this.hasTilesGroup() && mixCount < this._maxMixes) {
       this.mixTilesOnce();
       mixCount++;
-      cc.log("count: ", mixCount);
     }
     if (!this.hasTilesGroup()) {
       this._renderer.dispatchEvent(
@@ -122,16 +119,43 @@ class Tiles {
   }
 
   determineTilesGroupByRadius(x, y) {
+    console.log("boom");
+    for (
+      let column = this.getExplosionStartIndex(x);
+      column <= this.getExplosionEndIndex(x, this._columns - 1);
+      column++
+    ) {
+      for (
+        let row = this.getExplosionStartIndex(y);
+        row <= this.getExplosionEndIndex(y, this._rows - 1);
+        row++
+      ) {
+        this._tilesGroup.push({ x: column, y: row });
+      }
+    }
+    cc.log(this._tilesGroup);
     return this;
+  }
+
+  getExplosionStartIndex(index) {
+    const diff = index - this._explosionRadius;
+    return diff > 0 ? diff : 0;
+  }
+  getExplosionEndIndex(index, max) {
+    const diff = index + this._explosionRadius;
+    return diff < max ? diff : max;
   }
 
   determineTilesGroupForSuperTile(x, y, isExplosion) {
     return this;
   }
 
-  destroyTilesGroup() {
+  destroyTilesGroup(isExplosion) {
     if (this._tilesGroup.length >= this._minTilesGroupLength) {
-      if (this._tilesGroup.length >= this._tilesGroupLengthForSuperTile) {
+      if (
+        this._tilesGroup.length >= this._tilesGroupLengthForSuperTile &&
+        !isExplosion
+      ) {
         const { x, y } = this._tilesGroup.head;
         this._renderer.destroyElement(this.get(x, y));
         const superTile = this._renderer.createElement(true);
