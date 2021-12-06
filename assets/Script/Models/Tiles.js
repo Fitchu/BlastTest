@@ -2,26 +2,45 @@ import { get } from "lodash";
 import TilesGroup from "./TilesGroup";
 
 class Tiles {
-  constructor(columns, rows, minTilesGroupLength, totalMixCount, renderer) {
+  constructor(
+    columns,
+    rows,
+    minTilesGroupLength,
+    maxMixes,
+    explosionRadius,
+    tilesGroupLengthForSuperTile,
+    renderer
+  ) {
     this._columns = columns;
     this._rows = rows;
     this._tiles = new Array(this._columns);
     this._minTilesGroupLength = minTilesGroupLength;
     this._tilesGroup = new TilesGroup(this);
-    this._totalMixCount = totalMixCount;
-    this._mixCount = 0;
+    this._maxMixes = maxMixes;
     this._renderer = renderer;
+    this._explosionRadius = explosionRadius;
+    this._tilesGroupLengthForSuperTile = tilesGroupLengthForSuperTile;
+    this.init();
+  }
 
-    //do {ПРОВЕРКА НА НАЛИЧИЕ ГРУПП
+  init() {
+    let count = 0;
+    do {
+      count++;
+      for (let x = 0; x < this._columns; x++) {
+        this._tiles[x] = new Array(this._rows);
+        for (let y = 0; y < this._rows; y++) {
+          const tile = this._renderer.createElement();
+          this.set(x, y, tile);
+        }
+      }
+    } while (!this.hasTilesGroup());
+    cc.log(count);
     for (let x = 0; x < this._columns; x++) {
-      this._tiles[x] = new Array(this._rows);
       for (let y = 0; y < this._rows; y++) {
-        const tile = this._renderer.createElement();
-        this.set(x, y, tile);
-        this._renderer.renderElement(tile, { x, y });
+        this._renderer.renderElement(this.get(x, y), { x, y });
       }
     }
-    //} while (!this.hasTilesGroup());
   }
   get(x, y) {
     return this._tiles[x][y];
@@ -34,7 +53,20 @@ class Tiles {
     const column = number % this._rows;
     return { x: row, y: column };
   }
-  mixTiles() {
+  hasTilesGroup() {
+    for (let x = 0; x < this._columns; x++) {
+      for (let y = 0; y < this._rows; y++) {
+        this.determineTilesGroup(x, y, this.get(x, y).name);
+        if (this._tilesGroup.length >= this._minTilesGroupLength) {
+          this._tilesGroup = new TilesGroup(this);
+          return true;
+        }
+        this._tilesGroup = new TilesGroup(this);
+      }
+    }
+    return false;
+  }
+  mixTilesOnce() {
     for (let i = 0; i <= (this._rows * this._columns) / 2; i++) {
       const firstTilePoint = this.getTileCoordinatesByNumber(i);
 
@@ -52,16 +84,23 @@ class Tiles {
       this._renderer.moveElement(secondTile, firstTilePoint);
     }
   }
-  hasTilesGroup() {
-    for (let x = 0; x < this._columns; x++) {
-      for (let y = 0; y < this._rows; y++) {
-        this.determineTilesGroup(x, y, this.get(x, y).name);
-        if (this._tilesGroup.length >= this._minTilesGroupLength) return true;
-        this._tilesGroup = new TilesGroup(this);
-      }
+
+  mixTiles() {
+    let mixCount = 0;
+    cc.log("max: ", this._maxMixes);
+    console.log(!this.hasTilesGroup() && mixCount < this._maxMixes);
+    while (!this.hasTilesGroup() && mixCount < this._maxMixes) {
+      this.mixTilesOnce();
+      mixCount++;
+      cc.log("count: ", mixCount);
     }
-    return false;
+    if (!this.hasTilesGroup()) {
+      this._renderer.dispatchEvent(
+        new cc.Event.EventCustom("maxMixesReached", true)
+      );
+    }
   }
+
   determineTilesGroup(x, y, color) {
     if (
       this._tilesGroup.find((tile) => tile.x === x && tile.y === y) ||
@@ -82,24 +121,39 @@ class Tiles {
     return this;
   }
 
+  determineTilesGroupByRadius(x, y) {
+    return this;
+  }
+
+  determineTilesGroupForSuperTile(x, y, isExplosion) {
+    return this;
+  }
+
   destroyTilesGroup() {
     if (this._tilesGroup.length >= this._minTilesGroupLength) {
+      if (this._tilesGroup.length >= this._tilesGroupLengthForSuperTile) {
+        const { x, y } = this._tilesGroup.head;
+        this._renderer.destroyElement(this.get(x, y));
+        const superTile = this._renderer.createElement(true);
+        this._renderer.renderElement(superTile, { x, y });
+        this._tiles[x].splice(y, 1, superTile);
+        this._tilesGroup.spliceHead();
+      }
+      const tilesCount = this._tilesGroup.length;
       this._tilesGroup.forEach((tile) => {
         this._renderer.destroyElement(this.get(tile.x, tile.y));
         this._tiles[tile.x].splice(tile.y, 1, null);
       });
-      this.dispatchScoreUp();
+      this.dispatchTilesGroupDestroyed(tilesCount);
     } else {
       this._tilesGroup = new TilesGroup(this);
     }
     return this;
   }
-  dispatchScoreUp() {
-    if (this._tilesGroup.length) {
-      const event = new cc.Event.EventCustom("scoreUp", true);
-      event.setUserData({ count: this._tilesGroup.length });
-      this._renderer.dispatchEvent(event);
-    }
+  dispatchTilesGroupDestroyed(count) {
+    const event = new cc.Event.EventCustom("tilesGroupDestroyed", true);
+    event.setUserData({ count });
+    this._renderer.dispatchEvent(event);
   }
   displaceTiles() {
     for (const [x, y] of Object.entries(this._tilesGroup.minYByX)) {
@@ -139,7 +193,10 @@ class Tiles {
         this._tiles[x].splice(this._rows, 1);
       }
     }
-    this._tilesGroup = new TilesGroup(this);
+    if (this._tilesGroup.length) {
+      this._tilesGroup = new TilesGroup(this);
+      this.mixTiles();
+    }
     return this;
   }
 }

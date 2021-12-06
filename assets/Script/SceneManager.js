@@ -7,10 +7,10 @@ cc.Class({
   loadMain() {
     cc.director.loadScene("Main");
   },
-  handleGameOver(score, result) {
+  loadGameOver(message) {
     cc.director.loadScene("GameOver", (err, scene) => {
       const label = cc.find("Canvas/GameOver_Label").getComponent(cc.Label);
-      label.string = `${result ? "Победа" : "Поражение"}. Ваш счет: ${score}`;
+      label.string = message;
     });
   },
 });

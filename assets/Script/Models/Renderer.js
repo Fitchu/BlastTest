@@ -17,20 +17,30 @@ class Renderer {
   }
   //TODO: СДЕЛАТЬ ВСЕ МЕТОДЫ ПРОМИСАМИ
 
-  renderElement(element, position) {
-    return this._renderElementCallback.call(this._renderer, element, position);
+  renderElement(element, position, ...args) {
+    return this._renderElementCallback.call(
+      this._renderer,
+      element,
+      position,
+      args
+    );
   }
-  destroyElement(element) {
-    return this._destroyElementCallback.call(this._renderer, element);
+  destroyElement(element, ...args) {
+    return this._destroyElementCallback.call(this._renderer, element, ...args);
   }
-  createElement() {
-    return this._createElementCallback.call(this._renderer);
+  createElement(...args) {
+    return this._createElementCallback.call(this._renderer, ...args);
   }
-  moveElement(element, position) {
-    return this._moveElementCallback.call(this._renderer, element, position);
+  moveElement(element, position, ...args) {
+    return this._moveElementCallback.call(
+      this._renderer,
+      element,
+      position,
+      ...args
+    );
   }
-  dispatchEvent(event) {
-    return this._dispatchEventCallback.call(this._renderer, event);
+  dispatchEvent(event, ...args) {
+    return this._dispatchEventCallback.call(this._renderer, event, ...args);
   }
 }
 

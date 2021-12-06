@@ -38,7 +38,8 @@ cc.Class({
     },
   },
   onLoad() {
-    this.node.on("scoreUp", this.handleScoreUp, this);
+    this.node.on("maxMixesReached", this.handleMaxMixesReached, this);
+    this.node.on("tilesGroupDestroyed", this.handleScoreUp, this);
     this._sceneManager = cc.find("SceneManager").getComponent("SceneManager");
   },
 
@@ -46,6 +47,11 @@ cc.Class({
     this.barSprite.fillRange = 0;
     this._countMove = this.totalMove;
     this.moveLabel.string = this.totalMove;
+  },
+  getResult() {
+    return `${
+      this._countScore >= this.totalScrore ? "Победа" : "Поражение"
+    }. Ваш счет: ${this._countScore}`;
   },
   handleScoreUp(event) {
     event.stopPropagation();
@@ -56,12 +62,15 @@ cc.Class({
     this.moveLabel.string = --this._countMove;
 
     if (this._countScore < this.totalScrore && this._countMove >= 0) return;
-    this._sceneManager.handleGameOver(
-      this._countScore,
-      this._countScore >= this.totalScrore
-    );
+    this._sceneManager.loadGameOver(this.getResult());
+  },
+  handleMaxMixesReached() {
+    this._sceneManager.loadGameOver(this.getResult());
   },
   fillBar(value) {
     this.barSprite.fillRange = value;
+  },
+  onDestroy() {
+    this.node.off("tilesGroupDestroyed", this.handleScoreUp, this);
   },
 });

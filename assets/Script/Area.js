@@ -28,14 +28,29 @@ cc.Class({
       type: cc.Integer,
       displayName: "(K) Min. tiles in the group",
     },
-    totalMixCount: {
+    maxMixes: {
       default: 2,
       type: cc.Integer,
       displayName: "(S) Mixing tiles count",
     },
-    Tile_Prefabs: {
+    explosionRadius: {
+      default: 3,
+      type: cc.Integer,
+      displayName: "(R) Explosion radius",
+    },
+    tilesGroupLengthForSuperTile: {
+      default: 7,
+      type: cc.Integer,
+      displayName:
+        "(L) Min. length of destroyed tiles group for generation Super Tile",
+    },
+    tilePrefabs: {
       type: [cc.Prefab],
       default: [],
+    },
+    superTile: {
+      type: cc.Prefab,
+      default: null,
     },
     _chooseTiles: {
       type: [cc.Prefab],
@@ -56,13 +71,7 @@ cc.Class({
     this.setRandomTiles();
     const renderer = new Renderer(this, {
       createElementCallback: this.createNodeChild,
-      renderElementCallback: (child, position) => {
-        if (position) {
-          const { x, y } = position;
-          child.setPosition(x * config.tileWidth, y * config.tileHeight);
-        }
-        this.node.addChild(child);
-      },
+      renderElementCallback: this.renderNode,
       destroyElementCallback: this.destroyNode,
       moveElementCallback: this.moveNode,
       dispatchEventCallback: (event) => this.node.dispatchEvent(event),
@@ -71,14 +80,25 @@ cc.Class({
       this.areaWidth,
       this.areaHeight,
       this.minTilesInGroup,
-      this.totalMixCount,
+      this.maxMixes,
+      this.explosionRadius,
+      this.tilesGroupLengthForSuperTile,
       renderer
     );
   },
+  renderNode(node, position) {
+    if (position) {
+      const { x, y } = position;
+      node.zIndex = y;
+      node.setPosition(x * config.tileWidth, y * config.tileHeight);
+    }
+    this.node.addChild(node);
+  },
   moveNode(node, position) {
     const { x, y } = position;
+    node.zIndex = y;
     cc.tween(node)
-      .to(0.75, {
+      .to(0.5, {
         position: cc.v2(x * config.tileWidth, y * config.tileHeight),
       })
       .start();
@@ -96,15 +116,17 @@ cc.Class({
   },
 
   createTest(x, y, test, withoutRendering = false) {
-    const nodeChild = cc.instantiate(this.Tile_Prefabs[test]);
+    const nodeChild = cc.instantiate(this.tilePrefabs[test]);
     nodeChild.setScale(config.tileScaleSize);
     if (!withoutRendering) this.renderNode(x, y, nodeChild);
     return nodeChild;
   },
-  createNodeChild() {
-    const nodeChild = cc.instantiate(
-      this._chooseTiles[this.getRandomNumber(this.colorsAmount)]
-    );
+  createNodeChild(isSuper) {
+    const nodeChild = isSuper
+      ? cc.instantiate(this.superTile)
+      : cc.instantiate(
+          this._chooseTiles[this.getRandomNumber(this.colorsAmount)]
+        );
     nodeChild.setScale(config.tileScaleSize);
     return nodeChild;
   },
@@ -120,10 +142,10 @@ cc.Class({
   },
 
   setRandomTiles() {
-    let arr = Array.from(Array(this.Tile_Prefabs.length).keys());
+    let arr = Array.from(Array(this.tilePrefabs.length).keys());
     for (let i = 0; i < this.colorsAmount; i++) {
       this._chooseTiles.push(
-        this.Tile_Prefabs[arr.splice(this.getRandomNumber(arr.length), 1)[0]]
+        this.tilePrefabs[arr.splice(this.getRandomNumber(arr.length), 1)[0]]
       );
     }
   },
