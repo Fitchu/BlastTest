@@ -109,6 +109,7 @@ cc.Class({
       .start();
   },
   destroyNode(node) {
+    cc.log(node);
     cc.tween(node)
       .to(0.3, {
         scale: 0,
@@ -148,8 +149,8 @@ cc.Class({
         this._source = null;
       }
     } else {
-      this._tiles[this.getDetermineMethodName()](x, y, event.target.name)
-        .destroyTilesGroup(this._booster === "bomb")
+      this.determineTilesGroup(event.target, x, y)
+        .destroyTilesGroup(!(this._booster === "bomb" || event.target.isSuper))
         .displaceTiles();
       this._booster = "";
     }
@@ -175,7 +176,19 @@ cc.Class({
       );
     }
   },
-  getDetermineMethodName() {
+  determineTilesGroup(tile, x, y) {
+    return tile.isSuper
+      ? this._tiles.determineTilesGroupForSuperTile(
+          x,
+          y,
+          this._booster === "bomb"
+        )
+      : this._booster === "bomb"
+      ? this._tiles.determineTilesGroupByRadius(x, y)
+      : this._tiles.determineTilesGroup(x, y, tile.name);
+  },
+  getDetermineMethodName(tile) {
+    if (tile.isSuper) return "determineTilesGroupForSuperTile";
     return `determineTilesGroup${this._booster === "bomb" ? "ByRadius" : ""}`;
   },
   getRandomNumber(number) {

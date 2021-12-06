@@ -24,9 +24,7 @@ class Tiles {
   }
 
   init() {
-    let count = 0;
     do {
-      count++;
       for (let x = 0; x < this._columns; x++) {
         this._tiles[x] = new Array(this._rows);
         for (let y = 0; y < this._rows; y++) {
@@ -35,7 +33,7 @@ class Tiles {
         }
       }
     } while (!this.hasTilesGroup());
-    cc.log(count);
+
     for (let x = 0; x < this._columns; x++) {
       for (let y = 0; y < this._rows; y++) {
         this._renderer.renderElement(this.get(x, y), { x, y });
@@ -118,50 +116,71 @@ class Tiles {
     return this;
   }
 
-  determineTilesGroupByRadius(x, y) {
-    console.log("boom");
+  determineTilesGroupByRadius(x, y, radius) {
     for (
-      let column = this.getExplosionStartIndex(x);
-      column <= this.getExplosionEndIndex(x, this._columns - 1);
+      let column = this.getExplosionStartIndex(x, radius);
+      column <= this.getExplosionEndIndex(x, this._columns - 1, radius);
       column++
     ) {
       for (
-        let row = this.getExplosionStartIndex(y);
-        row <= this.getExplosionEndIndex(y, this._rows - 1);
+        let row = this.getExplosionStartIndex(y, radius);
+        row <= this.getExplosionEndIndex(y, this._rows - 1, radius);
         row++
       ) {
         this._tilesGroup.push({ x: column, y: row });
       }
     }
-    cc.log(this._tilesGroup);
     return this;
   }
 
-  getExplosionStartIndex(index) {
-    const diff = index - this._explosionRadius;
+  getExplosionStartIndex(index, radius) {
+    const diff = index - (radius ? radius : this._explosionRadius);
     return diff > 0 ? diff : 0;
   }
-  getExplosionEndIndex(index, max) {
-    const diff = index + this._explosionRadius;
+  getExplosionEndIndex(index, max, radius) {
+    const diff = index + (radius ? radius : this._explosionRadius);
     return diff < max ? diff : max;
   }
 
+  //добавить логику определения группы тайлов для супертайлов
   determineTilesGroupForSuperTile(x, y, isExplosion) {
+    if (isExplosion)
+      return this.determineTilesGroupByRadius(x, y, this._explosionRadius * 2);
+    const variant = Math.floor(Math.random() * 100);
+    if (0 < variant && variant < 31) {
+      for (let column = 0; column < this._columns; column++) {
+        this._tilesGroup.push({ x: column, y });
+      }
+    } else if (30 < variant && variant < 61) {
+      for (let row = 0; row < this._rows; row++) {
+        this._tilesGroup.push({ x, y: row });
+      }
+    } else if (60 < variant && variant < 91) {
+      return this.determineTilesGroupByRadius(x, y);
+    } else if (variant < 101) {
+      for (let column = 0; column < this._columns; column++) {
+        for (let row = 0; row < this._rows; row++) {
+          this._tilesGroup.push({ x: column, y: row });
+        }
+      }
+    }
     return this;
   }
 
-  destroyTilesGroup(isExplosion) {
+  //подумать надо ли генерировать супертайл тут или все-таки на смещении
+  destroyTilesGroup(generateSuperTile = true) {
     if (this._tilesGroup.length >= this._minTilesGroupLength) {
       if (
         this._tilesGroup.length >= this._tilesGroupLengthForSuperTile &&
-        !isExplosion
+        generateSuperTile
       ) {
         const { x, y } = this._tilesGroup.head;
         this._renderer.destroyElement(this.get(x, y));
         const superTile = this._renderer.createElement(true);
+        superTile.isSuper = true;
         this._renderer.renderElement(superTile, { x, y });
         this._tiles[x].splice(y, 1, superTile);
-        this._tilesGroup.spliceHead();
+        this._tilesGroup.decapitate();
       }
       const tilesCount = this._tilesGroup.length;
       this._tilesGroup.forEach((tile) => {

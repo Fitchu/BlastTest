@@ -15,7 +15,7 @@ class TilesGroup extends Array {
     super.push(value);
   }
 
-  spliceHead() {
+  decapitate() {
     if (!this.head) throw new Error("Tiles Group doesn't have a head.");
     const { x, y } = this.head;
     if (this.minYByX[x] === y) {
