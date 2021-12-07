@@ -15,6 +15,7 @@ class Renderer {
     this._createElementCallback = createElementCallback;
     this._dispatchEventCallback = dispatchEventCallback;
   }
+
   //TODO: СДЕЛАТЬ ВСЕ МЕТОДЫ ПРОМИСАМИ
 
   renderElement(element, position, ...args) {

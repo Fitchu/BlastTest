@@ -1,60 +1,82 @@
-import { get } from "lodash";
 import TilesGroup from "./TilesGroup";
+import TilesGroupDeterminer from "./TilesGroupDeterminers/TilesGroupDeterminer";
+import Position from "./Position";
+import Tile from "../Tile";
 
 class Tiles {
-  constructor(
-    columns,
-    rows,
-    minTilesGroupLength,
-    maxMixes,
-    explosionRadius,
-    tilesGroupLengthForSuperTile,
-    renderer
-  ) {
+  constructor(columns, rows, renderer, options) {
     this._columns = columns;
     this._rows = rows;
-    this._tiles = new Array(this._columns);
-    this._minTilesGroupLength = minTilesGroupLength;
-    this._tilesGroup = new TilesGroup(this);
-    this._maxMixes = maxMixes;
     this._renderer = renderer;
-    this._explosionRadius = explosionRadius;
+
+    const { minTilesGroupLength, maxMixes, tilesGroupLengthForSuperTile } =
+      options;
+    this._minTilesGroupLength = minTilesGroupLength;
+    this._maxMixes = maxMixes;
     this._tilesGroupLengthForSuperTile = tilesGroupLengthForSuperTile;
+
+    this._tiles = new Array(this._columns);
+    this._defaultDeterminer = new TilesGroupDeterminer(this);
+    this._tilesGroup = new TilesGroup(this);
     this.init();
+  }
+
+  get(position) {
+    const { column, row } = position;
+    return this._tiles[column][row];
+  }
+  set(position, value) {
+    const { column, row } = position;
+    this._tiles[column][row] = value;
+  }
+
+  get columns() {
+    return this._columns;
+  }
+
+  get rows() {
+    return this._rows;
+  }
+
+  get tiles() {
+    return this._tiles;
+  }
+
+  get size() {
+    return this._columns * this._rows;
   }
 
   init() {
     do {
-      for (let x = 0; x < this._columns; x++) {
-        this._tiles[x] = new Array(this._rows);
-        for (let y = 0; y < this._rows; y++) {
+      for (let column = 0; column < this._columns; column++) {
+        this._tiles[column] = new Array(this._rows);
+        for (let row = 0; row < this._rows; row++) {
           const tile = this._renderer.createElement();
-          this.set(x, y, tile);
+          this.set(new Position(column, row), tile);
         }
       }
     } while (!this.hasTilesGroup());
 
-    for (let x = 0; x < this._columns; x++) {
-      for (let y = 0; y < this._rows; y++) {
-        this._renderer.renderElement(this.get(x, y), { x, y });
+    for (let column = 0; column < this._columns; column++) {
+      for (let row = 0; row < this._rows; row++) {
+        const position = new Position(column, row);
+        this._renderer.renderElement(this.get(position), position);
       }
     }
   }
-  get(x, y) {
-    return this._tiles[x][y];
-  }
-  set(x, y, value) {
-    this._tiles[x][y] = value;
-  }
+
   getTileCoordinatesByNumber(number) {
-    const row = Math.floor(number / this._rows);
-    const column = number % this._rows;
-    return { x: row, y: column };
+    const column = Math.floor(number / this._columns);
+    const row = number % this._columns;
+    return new Position(column, row);
   }
   hasTilesGroup() {
-    for (let x = 0; x < this._columns; x++) {
-      for (let y = 0; y < this._rows; y++) {
-        this.determineTilesGroup(x, y, this.get(x, y).name);
+    for (let column = 0; column < this._columns; column++) {
+      for (let row = 0; row < this._rows; row++) {
+        this.determineTilesGroup(
+          { column, row },
+          this.get({ column, row }).name
+        );
         if (this._tilesGroup.length >= this._minTilesGroupLength) {
           this._tilesGroup = new TilesGroup(this);
           return true;
@@ -64,29 +86,38 @@ class Tiles {
     }
     return false;
   }
-  mixTilesOnce() {
-    for (let i = 0; i <= (this._rows * this._columns) / 2; i++) {
+
+  mixOnce() {
+    const halfOfTiles = this.size / 2;
+    for (let i = 0; i <= halfOfTiles; i++) {
       const firstTilePoint = this.getTileCoordinatesByNumber(i);
 
       const secondTilePoint = this.getTileCoordinatesByNumber(
-        Math.floor(
-          (Math.random() * (this._rows * this._columns)) / 2 +
-            (this._rows * this._columns) / 2
-        )
+        Math.floor((Math.random() * this.size) / 2 + halfOfTiles)
       );
-      const firstTile = this.get(firstTilePoint.x, firstTilePoint.y);
-      const secondTile = this.get(secondTilePoint.x, secondTilePoint.y);
-      this.set(secondTilePoint.x, secondTilePoint.y, firstTile);
-      this.set(firstTilePoint.x, firstTilePoint.y, secondTile);
+      const firstTilePosition = new Position(
+        firstTilePoint.column,
+        firstTilePoint.row
+      );
+
+      const secondTilePosition = new Position(
+        secondTilePoint.column,
+        secondTilePoint.row
+      );
+
+      const firstTile = this.get(firstTilePosition);
+      const secondTile = this.get(secondTilePosition);
+      this.set(secondTilePosition, firstTile);
+      this.set(firstTilePosition, secondTile);
       this._renderer.moveElement(firstTile, secondTilePoint);
       this._renderer.moveElement(secondTile, firstTilePoint);
     }
   }
 
-  mixTiles() {
+  mix() {
     let mixCount = 0;
     while (!this.hasTilesGroup() && mixCount < this._maxMixes) {
-      this.mixTilesOnce();
+      this.mixOnce();
       mixCount++;
     }
     if (!this.hasTilesGroup()) {
@@ -96,96 +127,26 @@ class Tiles {
     }
   }
 
-  determineTilesGroup(x, y, color) {
-    if (
-      this._tilesGroup.find((tile) => tile.x === x && tile.y === y) ||
-      color !== get(this._tiles, `[${x}][${y}].name`)
-    )
-      return;
-
-    this._tilesGroup.push({ x, y });
-    const points = [
-      { x: x + 1, y },
-      { x: x - 1, y },
-      { x, y: y + 1 },
-      { x, y: y - 1 },
-    ];
-    points.forEach((point) => {
-      this.determineTilesGroup(point.x, point.y, color);
-    });
+  useTilesGroupDeterminer(determiner) {
+    this._determiner = determiner;
     return this;
   }
 
-  determineTilesGroupByRadius(x, y, radius) {
-    for (
-      let column = this.getExplosionStartIndex(x, radius);
-      column <= this.getExplosionEndIndex(x, this._columns - 1, radius);
-      column++
-    ) {
-      for (
-        let row = this.getExplosionStartIndex(y, radius);
-        row <= this.getExplosionEndIndex(y, this._rows - 1, radius);
-        row++
-      ) {
-        this._tilesGroup.push({ x: column, y: row });
-      }
-    }
-    return this;
+  determineTilesGroup(...args) {
+    const determiner = this._determiner ?? this._defaultDeterminer;
+    this._tilesGroup = determiner.determineTilesGroup(...args);
+    determiner.clear();
+    return this._tilesGroup;
   }
 
-  getExplosionStartIndex(index, radius) {
-    const diff = index - (radius ? radius : this._explosionRadius);
-    return diff > 0 ? diff : 0;
-  }
-  getExplosionEndIndex(index, max, radius) {
-    const diff = index + (radius ? radius : this._explosionRadius);
-    return diff < max ? diff : max;
-  }
-
-  //добавить логику определения группы тайлов для супертайлов
-  determineTilesGroupForSuperTile(x, y, isExplosion) {
-    if (isExplosion)
-      return this.determineTilesGroupByRadius(x, y, this._explosionRadius * 2);
-    const variant = Math.floor(Math.random() * 100);
-    if (0 < variant && variant < 31) {
-      for (let column = 0; column < this._columns; column++) {
-        this._tilesGroup.push({ x: column, y });
-      }
-    } else if (30 < variant && variant < 61) {
-      for (let row = 0; row < this._rows; row++) {
-        this._tilesGroup.push({ x, y: row });
-      }
-    } else if (60 < variant && variant < 91) {
-      return this.determineTilesGroupByRadius(x, y);
-    } else if (variant < 101) {
-      for (let column = 0; column < this._columns; column++) {
-        for (let row = 0; row < this._rows; row++) {
-          this._tilesGroup.push({ x: column, y: row });
-        }
-      }
-    }
-    return this;
-  }
-
-  //подумать надо ли генерировать супертайл тут или все-таки на смещении
-  destroyTilesGroup(generateSuperTile = true) {
+  destroy() {
     if (this._tilesGroup.length >= this._minTilesGroupLength) {
-      if (
-        this._tilesGroup.length >= this._tilesGroupLengthForSuperTile &&
-        generateSuperTile
-      ) {
-        const { x, y } = this._tilesGroup.head;
-        this._renderer.destroyElement(this.get(x, y));
-        const superTile = this._renderer.createElement(true);
-        superTile.isSuper = true;
-        this._renderer.renderElement(superTile, { x, y });
-        this._tiles[x].splice(y, 1, superTile);
-        this._tilesGroup.decapitate();
-      }
       const tilesCount = this._tilesGroup.length;
       this._tilesGroup.forEach((tile) => {
-        this._renderer.destroyElement(this.get(tile.x, tile.y));
-        this._tiles[tile.x].splice(tile.y, 1, null);
+        this._renderer.destroyElement(
+          this.get({ column: tile.column, row: tile.row })
+        );
+        this._tiles[tile.column].splice(tile.row, 1, null);
       });
       this.dispatchTilesGroupDestroyed(tilesCount);
     } else {
@@ -198,49 +159,65 @@ class Tiles {
     event.setUserData({ count });
     this._renderer.dispatchEvent(event);
   }
-  displaceTiles() {
-    for (const [x, y] of Object.entries(this._tilesGroup.minYByX)) {
+  generate(withSuperTile = true) {
+    if (
+      withSuperTile &&
+      this._tilesGroup.length >= this._tilesGroupLengthForSuperTile
+    ) {
+      const superTile = this._renderer.createElement(withSuperTile);
+      this._renderer.renderElement(superTile, this._tilesGroup.head);
+      this.set(this._tilesGroup.head, superTile);
+      this._tilesGroup.decapitate();
+    }
+    for (const [column, count] of Object.entries(
+      this._tilesGroup.destroyedCountByX
+    )) {
+      for (let row = this._rows; row < this._rows + count; row++)
+        this.set(new Position(column, row), this._renderer.createElement());
+    }
+    return this;
+  }
+  displace() {
+    for (const [column, row] of Object.entries(this._tilesGroup.minYByX)) {
       let diff = 0;
-      let countToGenerate = 1;
-      let generatedTile = this._renderer.createElement();
-      this._renderer.moveElement(generatedTile, {
-        x,
-        y: this._rows + countToGenerate - 1,
-      });
-      this.set(x, this._rows + countToGenerate - 1, generatedTile);
-
-      for (let ynext = y + 1; ynext < this._rows + countToGenerate; ynext++) {
+      for (
+        let nextRow = row + 1;
+        nextRow < this._rows + this._tilesGroup.destroyedCountByX[column];
+        nextRow++
+      ) {
         diff++;
-        const tile = this.get(x, ynext);
+        const tile = this.get({ column, row: nextRow });
         if (tile) {
-          this.set(x, ynext - diff, tile);
-          const displacedTile = this.get(x, ynext - diff);
+          const displacedPosition = new Position(column, nextRow - diff);
+          this.set(displacedPosition, tile);
+          const displacedTile = this.get(displacedPosition);
 
-          if (ynext >= this._rows) {
-            this._renderer.renderElement(displacedTile, { x, y: ynext });
-          } else this._tiles[x].splice(ynext, 1, null);
-          this._renderer.moveElement(displacedTile, { x, y: ynext - diff });
+          if (nextRow >= this._rows) {
+            this._renderer.renderElement(
+              displacedTile,
+              new Position(column, nextRow)
+            );
+          } else this._tiles[column].splice(nextRow, 1, null);
+          this._renderer.moveElement(displacedTile, displacedPosition);
           diff--;
-        } else {
-          countToGenerate++;
-          generatedTile = this._renderer.createElement();
-          this._renderer.moveElement(generatedTile, {
-            x,
-            y: this._rows + countToGenerate - 1,
-          });
-
-          this.set(x, this._rows + countToGenerate - 1, generatedTile);
         }
       }
-      while (this.get(x, this._rows)) {
-        this._tiles[x].splice(this._rows, 1);
+      while (this.get({ column, row: this._rows })) {
+        this._tiles[column].splice(this._rows, 1);
       }
     }
     if (this._tilesGroup.length) {
       this._tilesGroup = new TilesGroup(this);
-      this.mixTiles();
+      this.mix();
     }
     return this;
+  }
+
+  swap(source, destination) {
+    this.set(source.position, destination.tile);
+    this.set(destination.position, source.tile);
+    this._renderer.moveElement(source.tile, destination.position);
+    this._renderer.moveElement(destination.tile, source.position);
   }
 }
 
