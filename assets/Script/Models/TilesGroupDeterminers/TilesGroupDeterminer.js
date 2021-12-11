@@ -37,4 +37,4 @@ class TilesGroupDeterminer {
   }
 }
 
-module.exports = TilesGroupDeterminer;
+export default TilesGroupDeterminer;

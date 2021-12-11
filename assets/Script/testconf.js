@@ -22,4 +22,4 @@ tests = {
     ],
   },
 };
-module.exports = tests;
+export default tests;

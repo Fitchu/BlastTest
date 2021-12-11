@@ -1,7 +1,6 @@
 import Tile from "../../Tile";
 import BombTilesGroupDeterminer from "../../Models/TilesGroupDeterminers/BombTilesGroupDeterminer";
 import SuperTilesGroupDeterminer from "../../Models/TilesGroupDeterminers/SuperTilesGroupDeterminer";
-import Position from "../../Models/Position";
 
 const properties = {
   minTilesGroupLength: {
@@ -27,14 +26,12 @@ const properties = {
   },
   explosionAmplificationBySuperTile: {
     default: 2,
-    type: cc.Number,
+    type: cc.Float,
   },
   _booster: {
     default: "",
   },
 };
-
-//добавить логику определения группы тайлов для супертайлов
 
 const methods = {
   setTiles: function (tiles) {
@@ -112,7 +109,5 @@ const methods = {
   },
 };
 
-export default {
-  gameMechanicsProperties: properties,
-  gameMechanicsMethods: methods,
-};
+export const gameMechanicsProperties = properties;
+export const gameMechanicsMethods = methods;

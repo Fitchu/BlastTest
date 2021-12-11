@@ -1825,7 +1825,7 @@
       "__id__": 9
     },
     "scoreLabel": {
-      "__id__": 15
+      "__id__": 13
     },
     "progressBarSprite": {
       "__id__": 23
@@ -2365,21 +2365,22 @@
         "__uuid__": "7fb5cabf-0bbb-4774-a1f7-55638fb04e84"
       },
       {
-        "__uuid__": "6f8b6891-0e26-4cd6-bc7c-b7921871aa5e"
+        "__uuid__": "764169ea-b64c-4b37-b190-633f863ece5c"
       },
       {
-        "__uuid__": "764169ea-b64c-4b37-b190-633f863ece5c"
+        "__uuid__": "f91b0c89-d868-4489-95e7-941f81f021a0"
       },
       {
         "__uuid__": "c19990b1-5637-4b0a-8993-97d43b8f9258"
       },
       {
-        "__uuid__": "f91b0c89-d868-4489-95e7-941f81f021a0"
+        "__uuid__": "6f8b6891-0e26-4cd6-bc7c-b7921871aa5e"
       }
     ],
     "superTile": {
       "__uuid__": "fdc9d40e-22b1-4a17-b0c4-97c7b40646b5"
     },
+    "_animationInProgressCount": 0,
     "_id": "b2MFGNbKBCILjtGARZ4J0e"
   },
   {
@@ -2390,10 +2391,14 @@
       "__id__": 45
     },
     "_enabled": true,
-    "width": 5,
-    "height": 5,
-    "_gameManager": null,
-    "_renderer": null,
+    "width": 8,
+    "height": 8,
+    "gameManagerNode": {
+      "__id__": 35
+    },
+    "tilesRendererNode": {
+      "__id__": 46
+    },
     "_id": "27Hj9sCtpB36SWzSiPnXjV"
   },
   {

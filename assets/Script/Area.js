@@ -1,7 +1,7 @@
 import Tiles from "./Models/Tiles";
 import GameManager from "./GameManager/GameManager";
 import TilesRenderer from "./TilesRenderer";
-import config from "./Config";
+import config from "./Utils/Config";
 
 cc.Class({
   extends: cc.Component,
@@ -23,23 +23,31 @@ cc.Class({
       default: null,
       serializable: false,
     },
-    _gameManager: {
-      type: GameManager,
+    gameManagerNode: {
+      type: cc.Node,
       default: null,
     },
-    _renderer: {
-      type: TilesRenderer,
+    tilesRendererNode: {
+      type: cc.Node,
       default: null,
     },
   },
 
   onLoad() {
-    this._gameManager = cc.find("GameManager").getComponent(GameManager);
-    this._renderer = this.node
-      .getChildByName("TilesRenderer")
-      .getComponent(TilesRenderer);
+    this._gameManager = this.gameManagerNode.getComponent(GameManager);
+    this._renderer = this.tilesRendererNode.getComponent(TilesRenderer);
 
     this.node.on("tileClick", this._gameManager.onTileClick, this._gameManager);
+    this.node.on(
+      "maxMixesReached",
+      this._gameManager.handleMaxMixesReached,
+      this._gameManager
+    );
+    this.node.on(
+      "tilesGroupDestroyed",
+      this._gameManager.handleScoreUp,
+      this._gameManager
+    );
     this.node.width = this.width * config.tileWidth + 25;
     this.node.height = this.height * config.tileHeight + 25;
     this.node.anchorX = (config.tileWidth + 25) / 2 / this.node.width;
@@ -53,10 +61,25 @@ cc.Class({
     this._gameManager.setTiles(this._tiles);
   },
 
+  // handleClick(event) {
+  //   if (!this._renderer.isAnimationInProgress())
+  //     this._gameManager.onTileClick(event);
+  //   return;
+  // },
   onDestroy() {
     this.node.off(
       "tileClick",
       this._gameManager.onTileClick,
+      this._gameManager
+    );
+    this.node.off(
+      "maxMixesReached",
+      this._gameManager.handleMaxMixesReached,
+      this._gameManager
+    );
+    this.node.off(
+      "tilesGroupDestroyed",
+      this._gameManager.handleScoreUp,
       this._gameManager
     );
   },

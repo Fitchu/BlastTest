@@ -1,7 +1,7 @@
 cc.Class({
   extends: cc.Component,
   start() {
-    cc.director.setClearColor(cc.color(90, 90, 90));
+    cc.Camera.main.backgroundColor = cc.color(90, 90, 90);
   },
   loadGame() {
     cc.director.loadScene("Game");

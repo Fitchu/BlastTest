@@ -7,7 +7,7 @@ import {
   UIComponentsMethods,
 } from "./Composables/useUIComponents";
 
-cc.Class({
+const GameManager = cc.Class({
   name: "GameManager",
   extends: cc.Component,
 
@@ -53,3 +53,5 @@ cc.Class({
     this.node.off("tilesGroupDestroyed", this.handleScoreUp, this);
   },
 });
+
+export default GameManager;

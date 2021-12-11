@@ -2,28 +2,30 @@ class TilesGroup extends Array {
   constructor(tiles) {
     super();
     this._tiles = tiles;
-    this.minYByX = {};
-    this.destroyedCountByX = {};
+    this.minRowByColumn = {};
+    this.tilesInColumn = {};
   }
 
   push(value) {
     if (!this.length) this.head = value;
-    if (!this.minYByX[value.column] && this.minYByX[value.column] !== 0) {
-      this.minYByX[value.column] = value.row;
-    } else if (this.minYByX[value.column] > value.row) {
-      this.minYByX[value.column] = value.row;
+    if (
+      !this.minRowByColumn[value.column] &&
+      this.minRowByColumn[value.column] !== 0
+    ) {
+      this.minRowByColumn[value.column] = value.row;
+    } else if (this.minRowByColumn[value.column] > value.row) {
+      this.minRowByColumn[value.column] = value.row;
     }
-    if (!this.destroyedCountByX[value.column])
-      this.destroyedCountByX[value.column] = 1;
-    else this.destroyedCountByX[value.column]++;
+    if (!this.tilesInColumn[value.column]) this.tilesInColumn[value.column] = 1;
+    else this.tilesInColumn[value.column]++;
     super.push(value);
   }
 
   decapitate() {
     if (!this.head) throw new Error("Tiles Group doesn't have a head.");
     const { column, row } = this.head;
-    this.destroyedCountByX[column]--;
-    if (this.minYByX[column] === row) {
+    this.tilesInColumn[column]--;
+    if (this.minRowByColumn[column] === row) {
       const min = this.filter(
         (tile) => tile.column === column && tile.row !== row
       ).reduce((acc, cur) => {
@@ -32,10 +34,10 @@ class TilesGroup extends Array {
         return acc;
       }, 0);
       if (min) {
-        this.minYByX[column] = min;
+        this.minRowByColumn[column] = min;
       } else {
-        delete this.minYByX[column];
-        delete this.destroyedCountByX[column];
+        delete this.minRowByColumn[column];
+        delete this.tilesInColumn[column];
       }
     }
     delete this.head;
@@ -43,8 +45,7 @@ class TilesGroup extends Array {
   }
 
   destroy() {
-    console.log(this._tiles);
     return this._tiles.destroy(...arguments);
   }
 }
-module.exports = TilesGroup;
+export default TilesGroup;

@@ -1,6 +1,6 @@
 import Position from "./Models/Position";
 
-cc.Class({
+const Tile = cc.Class({
   extends: cc.Component,
 
   properties: {
@@ -9,7 +9,6 @@ cc.Class({
       default: null,
     },
     isSuper: {
-      type: cc.Boolean,
       default: false,
     },
   },
@@ -19,7 +18,6 @@ cc.Class({
   dispatchEventClick() {
     this.node.dispatchEvent(new cc.Event.EventCustom("tileClick", true));
   },
-  start() {},
   setActive(active) {
     if (active) this.node.opacity = 128;
     else this.node.opacity = 255;
@@ -28,3 +26,5 @@ cc.Class({
     this.node.off(cc.Node.EventType.TOUCH_END, this.dispatchEventClick, this);
   },
 });
+
+export default Tile;

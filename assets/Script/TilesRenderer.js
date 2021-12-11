@@ -1,9 +1,10 @@
-import config from "./Config";
+import config from "./Utils/Config";
+import Utils from "./Utils/Utils";
 import Tile from "./Tile";
 import Renderer from "./Models/Renderer";
 import Position from "./Models/Position";
 
-cc.Class({
+const TilesRenderer = cc.Class({
   name: "TilesRenderer",
   extends: cc.Component,
   properties: {
@@ -25,28 +26,27 @@ cc.Class({
       default: [],
       serializable: false,
     },
+    _animationInProgressCount: {
+      type: cc.Integer,
+      default: 0,
+    },
   },
 
   onLoad() {
     this._area = this.node.parent;
-    cc.log(this._area);
   },
 
   createRendererInterface() {
     return new Renderer(this, {
       createElementCallback: this.createTile,
-      renderElementCallback: this.renderTile,
+      drawElementCallback: this.drawTile,
       destroyElementCallback: this.destroyTile,
       moveElementCallback: this.moveTile,
       dispatchEventCallback: (event) => this.node.dispatchEvent(event),
     });
   },
 
-  setOpacity(tile, opacity) {
-    tile.opacity = opacity;
-  },
-
-  renderTile(tile, position) {
+  drawTile(tile, position) {
     if (position) {
       const { column, row } = position;
       tile.zIndex = row;
@@ -55,24 +55,31 @@ cc.Class({
     }
     this._area.addChild(tile);
   },
-  moveTile(tile, position) {
+  moveTile(tile, position, callback) {
     const { column, row } = position;
     tile.zIndex = row;
     tile.getComponent(Tile).position = new Position(column, row);
+    this._animationInProgressCount++;
     cc.tween(tile)
       .to(0.5, {
         position: cc.v2(column * config.tileWidth, row * config.tileHeight),
       })
+      .call(() => {
+        this._animationInProgressCount--;
+        callback();
+      })
       .start();
   },
-  destroyTile(tile) {
+  destroyTile(tile, callback) {
+    this._animationInProgressCount++;
     cc.tween(tile)
       .to(0.3, {
         scale: 0,
-        position: cc.v2(tile.x, tile.y),
       })
       .call(() => {
+        this._animationInProgressCount--;
         this._area.removeChild(tile);
+        callback();
       })
       .start();
   },
@@ -81,9 +88,9 @@ cc.Class({
     const tile = isSuper
       ? cc.instantiate(this.superTile)
       : cc.instantiate(
-          this._chooseTiles[this.getRandomNumber(this.colorsAmount)]
+          this._chooseTiles[Utils.getRandomNumber(this.colorsAmount)]
         );
-    tile.getComponent(Tile).isSuper = isSuper;
+    tile.getComponent(Tile).isSuper = !!isSuper;
     tile.setScale(config.tileScaleSize);
     return tile;
   },
@@ -92,12 +99,13 @@ cc.Class({
     let arr = Array.from(Array(this.tilePrefabs.length).keys());
     for (let i = 0; i < this.colorsAmount; i++) {
       this._chooseTiles.push(
-        this.tilePrefabs[arr.splice(this.getRandomNumber(arr.length), 1)[0]]
+        this.tilePrefabs[arr.splice(Utils.getRandomNumber(arr.length), 1)[0]]
       );
     }
   },
 
-  getRandomNumber(number) {
-    return Math.floor(Math.random() * number);
+  isAnimationInProgress() {
+    return Boolean(this._animationInProgressCount);
   },
 });
+export default TilesRenderer;

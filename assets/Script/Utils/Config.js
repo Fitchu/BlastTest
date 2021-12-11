@@ -5,4 +5,4 @@ const cfg = {
   tileHeight: 40,
 };
 
-module.exports = cfg;
+export default cfg;

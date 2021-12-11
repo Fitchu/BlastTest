@@ -35,6 +35,7 @@ const methods = {
   onUIComponentsStart: function () {
     this.progressBarSprite.fillRange = 0;
     this.stepsLabel.string = this.totalSteps;
+    this._stepsCount = this.totalSteps;
   },
   getResult: function () {
     return `${
@@ -47,12 +48,10 @@ const methods = {
   scoreUp: function (score) {
     this._scoreCount += score.count * 10;
     this.fillBar(this._scoreCount / this.totalScore);
-    this.scoreLabel.string = this._countScore;
+    this.scoreLabel.string = this._scoreCount;
     this.stepsLabel.string = --this._stepsCount;
   },
 };
 
-export default {
-  UIComponentsProperties: properties,
-  UIComponentsMethods: methods,
-};
+export const UIComponentsProperties = properties;
+export const UIComponentsMethods = methods;

@@ -43,4 +43,4 @@ class SuperTilesGroupDeterminer extends TilesGroupDeterminer {
   }
 }
 
-module.exports = SuperTilesGroupDeterminer;
+export default SuperTilesGroupDeterminer;

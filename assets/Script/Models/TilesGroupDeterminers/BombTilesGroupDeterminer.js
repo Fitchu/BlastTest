@@ -46,4 +46,4 @@ class BombTilesGroupDeterminer extends TilesGroupDeterminer {
   }
 }
 
-module.exports = BombTilesGroupDeterminer;
+export default BombTilesGroupDeterminer;
