@@ -37,32 +37,32 @@ const toRightBottom = new Position(0, 3);
 describe("TilesGroupDeterminer", function () {
   describe("#determineTilesGroup()", function () {
     it("Находит правильную группу", function () {
-      const _determiner = new TilesGroupDeterminer(tiles1);
-      const _tilesGroup = _determiner.determineTilesGroup(
+      const determiner = new TilesGroupDeterminer(tiles1);
+      const tilesGroup = determiner.determineTilesGroup(
         clickedTilePosition1,
         clickedTileColor
       );
 
-      expect(_tilesGroup).to.have.deep.members(answer1);
+      expect(tilesGroup).to.have.deep.members(answer1);
     });
     describe("Не добавляет тайл в группу с тем же цветом по диагонали:", function () {
-      const _determiner = new TilesGroupDeterminer(tiles2);
-      const _tilesGroup = _determiner.determineTilesGroup(
+      const determiner = new TilesGroupDeterminer(tiles2);
+      const tilesGroup = determiner.determineTilesGroup(
         clickedTilePosition2,
         clickedTileColor
       );
 
       it("Налево вверх", function () {
-        expect(_tilesGroup).to.not.deep.include(toLeftUp);
+        expect(tilesGroup).to.not.deep.include(toLeftUp);
       });
       it("Направо вверх", function () {
-        expect(_tilesGroup).to.not.deep.include(toRightUp);
+        expect(tilesGroup).to.not.deep.include(toRightUp);
       });
       it("Направо вниз", function () {
-        expect(_tilesGroup).to.not.deep.include(toRightBottom);
+        expect(tilesGroup).to.not.deep.include(toRightBottom);
       });
       it("Налево вниз", function () {
-        expect(_tilesGroup).to.not.deep.include(toLeftBottom);
+        expect(tilesGroup).to.not.deep.include(toLeftBottom);
       });
     });
   });

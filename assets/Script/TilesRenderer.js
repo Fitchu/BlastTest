@@ -20,15 +20,26 @@ const TilesRenderer = cc.Class({
   },
 
   drawTile(tile, position, options, callback) {
-    if (position) {
-      const { column, row } = position;
-      tile.zIndex = row;
-      tile.setScale(config.tileScaleSize);
-      tile.setPosition(column * config.tileWidth, row * config.tileHeight);
-      tile.getComponent(Tile).position = new Position(column, row);
-    }
+    if (!position) throw new Error("Position is need to be defined.");
+    const { isSuper } = tile.getComponent(Tile);
+    const { column, row } = position;
+    tile.zIndex = isSuper ? 100 : row;
+    tile.setScale(isSuper ? config.tileScaleSize * 3 : config.tileScaleSize);
+    tile.setPosition(column * config.tileWidth, row * config.tileHeight);
+    tile.getComponent(Tile).position = new Position(column, row);
     this._mask.addChild(tile);
-    callback();
+    if (isSuper) {
+      cc.tween(tile)
+        .to(0.5, {
+          scale: config.tileScaleSize,
+          angle: 1080,
+        })
+        .call(() => {
+          tile.zIndex = position.row;
+          callback();
+        })
+        .start();
+    } else callback();
   },
   moveTile(tile, position, options, callback) {
     const { column, row } = position;

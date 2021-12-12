@@ -60,7 +60,6 @@ class Tiles {
     } while (!this.hasTilesGroup());
 
     const key = this._renderer.generateQueueKey();
-    cc.log("init");
     for (let column = 0; column < this._columns; column++) {
       for (let row = 0; row < this._rows; row++) {
         const position = new Position(column, row);
@@ -99,7 +98,6 @@ class Tiles {
 
   mixOnce(key) {
     const halfOfTiles = this.size / 2;
-    cc.log("mix");
     for (let i = 0; i < Math.floor(halfOfTiles); i++) {
       const firstTilePoint = this.getTileCoordinatesByNumber(i);
 
@@ -161,7 +159,6 @@ class Tiles {
     const _tilesGroup = tilesGroup ?? this._tilesGroup;
     if (_tilesGroup.length >= this._minTilesGroupLength) {
       const key = this._renderer.generateQueueKey();
-      cc.log("destroy");
       const tilesCount = _tilesGroup.length;
       _tilesGroup.forEach((tile) => {
         this._renderer.destroyElement(
@@ -187,7 +184,6 @@ class Tiles {
     const _tilesGroup = tilesGroup ?? this._tilesGroup;
     if (!_tilesGroup.length) return this;
     const key = this._renderer.generateQueueKey();
-    cc.log("generate");
     if (
       withSuperTile &&
       _tilesGroup.length >= this._tilesGroupLengthForSuperTile
@@ -208,7 +204,6 @@ class Tiles {
     const _tilesGroup = tilesGroup ?? this._tilesGroup;
     if (!_tilesGroup.length) return this;
     const key = this._renderer.generateQueueKey();
-    cc.log("displace");
     for (const [column, row] of Object.entries(_tilesGroup.minRowByColumn)) {
       let diff = 0;
       for (
@@ -249,7 +244,6 @@ class Tiles {
     this.set(source.position, destination.tile);
     this.set(destination.position, source.tile);
     const key = this._renderer.generateQueueKey();
-    cc.log("swap");
     this._renderer.moveElement(key, source.tile, destination.position);
     this._renderer.moveElement(key, destination.tile, source.position);
     this._renderer.closeInit(key);

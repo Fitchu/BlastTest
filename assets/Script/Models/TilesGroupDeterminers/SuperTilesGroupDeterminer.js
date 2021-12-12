@@ -19,13 +19,9 @@ class SuperTilesGroupDeterminer extends TilesGroupDeterminer {
     }
     const variant = Math.floor(Math.random() * 100);
     if (0 < variant && variant < 31) {
-      for (let column = 0; column < this._tiles.columns; column++) {
-        this._tilesGroup.push({ column, row });
-      }
+      return this.determineTilesGroupByColumn(column);
     } else if (30 < variant && variant < 61) {
-      for (let row = 0; row < this._tiles.rows; row++) {
-        this._tilesGroup.push({ column, row });
-      }
+      return this.determineTilesGroupByRow(row);
     } else if (60 < variant && variant < 91) {
       this._bombTilesGroupDeterminer.clear();
       return this._bombTilesGroupDeterminer.determineTilesGroup(
@@ -33,10 +29,26 @@ class SuperTilesGroupDeterminer extends TilesGroupDeterminer {
         explosionRadius
       );
     } else if (variant < 101) {
-      for (let column = 0; column < this._tiles.columns; column++) {
-        for (let row = 0; row < this._tiles.rows; row++) {
-          this._tilesGroup.push({ column, row });
-        }
+      return this.determineTilesGroupByArea();
+    }
+    return this._tilesGroup;
+  }
+  determineTilesGroupByColumn(column) {
+    for (let row = 0; row < this._tiles.rows; row++) {
+      this._tilesGroup.push({ column, row });
+    }
+    return this._tilesGroup;
+  }
+  determineTilesGroupByRow(row) {
+    for (let column = 0; column < this._tiles.columns; column++) {
+      this._tilesGroup.push({ column, row });
+    }
+    return this._tilesGroup;
+  }
+  determineTilesGroupByArea() {
+    for (let column = 0; column < this._tiles.columns; column++) {
+      for (let row = 0; row < this._tiles.rows; row++) {
+        this._tilesGroup.push({ column, row });
       }
     }
     return this._tilesGroup;

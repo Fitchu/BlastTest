@@ -50,7 +50,6 @@ const TilesFactory = cc.Class({
         ...assets.filter((asset) => asset.name !== "Super"),
       ];
       TilesFactory.instance.node.getComponent(TilesFactory).setRandomTiles();
-      cc.log(TilesFactory.instance);
       TilesFactory.instance.node.parent.getComponent(Area).init();
     });
   },
@@ -74,7 +73,6 @@ const TilesFactory = cc.Class({
   },
 
   setRandomTiles() {
-    cc.log("random");
     let arr = Array.from(Array(this._tileColors.length).keys());
     for (let i = 0; i < this.colorsAmount; i++) {
       const randomIndex = Utils.getRandomNumber(arr.length - 1);

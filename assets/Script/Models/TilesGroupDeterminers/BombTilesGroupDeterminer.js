@@ -1,12 +1,13 @@
 import TilesGroupDeterminer from "./TilesGroupDeterminer";
 
 class BombTilesGroupDeterminer extends TilesGroupDeterminer {
-  constructor(args) {
-    super(...args);
+  constructor() {
+    super(...arguments);
   }
 
   determineTilesGroup(position, explosionRadius) {
     const { column, row } = position;
+
     const columnStartIndex = this.getExplosionStartIndex(
       column,
       explosionRadius
