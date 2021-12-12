@@ -8,7 +8,6 @@
   "group-list": [
     "default"
   ],
-  "start-scene": "6dbf3993-bc86-4765-a50d-7ce2300d2346",
   "design-resolution-width": 960,
   "design-resolution-height": 640,
   "fit-width": false,
@@ -32,5 +31,6 @@
       "enable": false
     }
   },
-  "last-module-event-record-time": 1638684344856
+  "last-module-event-record-time": 1638684344856,
+  "start-scene": "6dbf3993-bc86-4765-a50d-7ce2300d2346"
 }
