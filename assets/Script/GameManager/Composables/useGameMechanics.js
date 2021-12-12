@@ -47,6 +47,7 @@ const methods = {
   },
   onTileClick: function (event) {
     event.stopPropagation();
+    if (this._tiles.isRendering()) return;
     const tile = event.target;
     if (this._booster === "teleport") {
       const tileComponent = tile.getComponent(Tile);

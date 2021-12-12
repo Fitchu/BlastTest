@@ -1,7 +1,9 @@
+import Tile from "../Tile";
+import TilesFactory from "../TilesFactory";
 import TilesGroup from "./TilesGroup";
 import TilesGroupDeterminer from "./TilesGroupDeterminers/TilesGroupDeterminer";
 import Position from "./Position";
-import Tile from "../Tile";
+import EventDispatcher from "../EventDispatcher";
 
 class Tiles {
   constructor(columns, rows, renderer, options) {
@@ -51,18 +53,21 @@ class Tiles {
       for (let column = 0; column < this._columns; column++) {
         this._tiles[column] = new Array(this._rows);
         for (let row = 0; row < this._rows; row++) {
-          const tile = this._renderer.createElement();
+          const tile = TilesFactory.createTile();
           this.set(new Position(column, row), tile);
         }
       }
     } while (!this.hasTilesGroup());
 
+    const key = this._renderer.generateQueueKey();
+    cc.log("init");
     for (let column = 0; column < this._columns; column++) {
       for (let row = 0; row < this._rows; row++) {
         const position = new Position(column, row);
-        this._renderer.drawElement(null, this.get(position), position);
+        this._renderer.drawElement(key, this.get(position), position);
       }
     }
+    this._renderer.closeInit(key);
   }
 
   getTileCoordinatesByNumber(number) {
@@ -92,9 +97,9 @@ class Tiles {
     return false;
   }
 
-  mixOnce() {
+  mixOnce(key) {
     const halfOfTiles = this.size / 2;
-    const key = this._renderer.generateQueueKey();
+    cc.log("mix");
     for (let i = 0; i < Math.floor(halfOfTiles); i++) {
       const firstTilePoint = this.getTileCoordinatesByNumber(i);
 
@@ -115,24 +120,28 @@ class Tiles {
       const secondTile = this.get(secondTilePosition);
       this.set(secondTilePosition, firstTile);
       this.set(firstTilePosition, secondTile);
-      this._renderer.moveElement(firstTile, secondTilePoint);
-      this._renderer.moveElement(secondTile, firstTilePoint);
+      this._renderer.moveElement(key, firstTile, secondTilePoint);
+      this._renderer.moveElement(key, secondTile, firstTilePoint);
     }
-    this._renderer.closeInit(key);
   }
 
   mix() {
     let mixCount = 0;
     let hasGroup = this.hasSuperTilesOrTilesGroup();
     while (!hasGroup && mixCount < this._maxMixes) {
-      this.mixOnce();
+      const key = this._renderer.generateQueueKey();
+      this.mixOnce(key);
       mixCount++;
       hasGroup = this.hasSuperTilesOrTilesGroup();
-    }
-    if (!hasGroup) {
-      this._renderer.dispatchEvent(
-        new cc.Event.EventCustom("maxMixesReached", true)
-      );
+      if (mixCount === this._maxMixes) {
+        this._renderer.closeInit(key, () => {
+          if (!hasGroup) {
+            EventDispatcher.dispatchEvent(
+              new cc.Event.EventCustom("maxMixesReached", true)
+            );
+          }
+        });
+      } else this._renderer.closeInit(key);
     }
   }
 
@@ -152,6 +161,7 @@ class Tiles {
     const _tilesGroup = tilesGroup ?? this._tilesGroup;
     if (_tilesGroup.length >= this._minTilesGroupLength) {
       const key = this._renderer.generateQueueKey();
+      cc.log("destroy");
       const tilesCount = _tilesGroup.length;
       _tilesGroup.forEach((tile) => {
         this._renderer.destroyElement(
@@ -160,8 +170,9 @@ class Tiles {
         );
         this._tiles[tile.column].splice(tile.row, 1, null);
       });
-      this.dispatchTilesGroupDestroyed(tilesCount);
-      this._renderer.closeInit(key);
+      this._renderer.closeInit(key, () => {
+        this.dispatchTilesGroupDestroyed(tilesCount);
+      });
     } else {
       this._tilesGroup = new TilesGroup(this);
     }
@@ -170,32 +181,34 @@ class Tiles {
   dispatchTilesGroupDestroyed(count) {
     const event = new cc.Event.EventCustom("tilesGroupDestroyed", true);
     event.setUserData({ count });
-    this._renderer.dispatchEvent(event);
+    EventDispatcher.dispatchEvent(event);
   }
   generate(withSuperTile = true, tilesGroup) {
     const _tilesGroup = tilesGroup ?? this._tilesGroup;
-    if (!_tilesGroup.length) return;
+    if (!_tilesGroup.length) return this;
     const key = this._renderer.generateQueueKey();
+    cc.log("generate");
     if (
       withSuperTile &&
       _tilesGroup.length >= this._tilesGroupLengthForSuperTile
     ) {
-      const superTile = this._renderer.createElement(key, withSuperTile);
+      const superTile = TilesFactory.createTile({ superTile: withSuperTile });
       this._renderer.drawElement(key, superTile, _tilesGroup.head);
       this.set(_tilesGroup.head, superTile);
       _tilesGroup.decapitate();
     }
     for (const [column, count] of Object.entries(_tilesGroup.tilesInColumn)) {
       for (let row = this._rows; row < this._rows + count; row++)
-        this.set(new Position(column, row), this._renderer.createElement(key));
+        this.set(new Position(column, row), TilesFactory.createTile());
     }
     this._renderer.closeInit(key);
     return this;
   }
   displace(tilesGroup) {
     const _tilesGroup = tilesGroup ?? this._tilesGroup;
-    if (!_tilesGroup.length) return;
+    if (!_tilesGroup.length) return this;
     const key = this._renderer.generateQueueKey();
+    cc.log("displace");
     for (const [column, row] of Object.entries(_tilesGroup.minRowByColumn)) {
       let diff = 0;
       for (
@@ -235,8 +248,15 @@ class Tiles {
   swap(source, destination) {
     this.set(source.position, destination.tile);
     this.set(destination.position, source.tile);
-    this._renderer.moveElement(source.tile, destination.position);
-    this._renderer.moveElement(destination.tile, source.position);
+    const key = this._renderer.generateQueueKey();
+    cc.log("swap");
+    this._renderer.moveElement(key, source.tile, destination.position);
+    this._renderer.moveElement(key, destination.tile, source.position);
+    this._renderer.closeInit(key);
+  }
+
+  isRendering() {
+    return this._renderer.inProgress();
   }
 }
 

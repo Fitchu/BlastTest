@@ -43,7 +43,7 @@ const methods = {
     }. Ваш счет: ${this._scoreCount}`;
   },
   fillBar: function (value) {
-    this.progressBarSprite.fillRange = value;
+    cc.tween(this.progressBarSprite).to(0.3, { fillRange: value }).start();
   },
   scoreUp: function (score) {
     this._scoreCount += score.count * 10;

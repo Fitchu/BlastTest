@@ -3,7 +3,7 @@ import GameManager from "./GameManager/GameManager";
 import TilesRenderer from "./TilesRenderer";
 import config from "./Utils/Config";
 
-cc.Class({
+const Area = cc.Class({
   extends: cc.Component,
 
   properties: {
@@ -53,19 +53,13 @@ cc.Class({
     this.node.anchorX = (config.tileWidth + 25) / 2 / this.node.width;
     this.node.anchorY = (config.tileHeight + 25) / 2 / this.node.height;
   },
-  start() {
-    this._renderer.setRandomTiles();
+  init() {
     const tilesOptions = this._gameManager.getTilesOptions();
     const renderer = this._renderer.createRendererInterface();
     this._tiles = new Tiles(this.width, this.height, renderer, tilesOptions);
     this._gameManager.setTiles(this._tiles);
   },
 
-  // handleClick(event) {
-  //   if (!this._renderer.isAnimationInProgress())
-  //     this._gameManager.onTileClick(event);
-  //   return;
-  // },
   onDestroy() {
     this.node.off(
       "tileClick",
@@ -84,3 +78,4 @@ cc.Class({
     );
   },
 });
+export default Area;
