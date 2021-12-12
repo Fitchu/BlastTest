@@ -1,2 +1,3 @@
-# hello-world
-Hello world new project template.
+# Blast Game
+
+Игра в жанре бласт
