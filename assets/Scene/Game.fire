@@ -1813,14 +1813,14 @@
       "__id__": 35
     },
     "_enabled": true,
-    "minTilesGroupLength": 3,
-    "maxMixes": 2,
+    "minTilesGroupLength": 4,
+    "maxMixes": 4,
     "explosionRadius": 1,
-    "tilesGroupLengthForSuperTile": 4,
+    "tilesGroupLengthForSuperTile": 6,
     "explosionAmplificationBySuperTile": 2,
     "_booster": "",
-    "totalSteps": 30,
-    "totalScore": 1500,
+    "totalSteps": 15,
+    "totalScore": 1300,
     "stepsLabel": {
       "__id__": 9
     },
@@ -2512,27 +2512,7 @@
       "__id__": 50
     },
     "_enabled": true,
-    "colorsAmount": 4,
-    "tilePrefabs": [
-      {
-        "__uuid__": "f91b0c89-d868-4489-95e7-941f81f021a0"
-      },
-      {
-        "__uuid__": "c19990b1-5637-4b0a-8993-97d43b8f9258"
-      },
-      {
-        "__uuid__": "764169ea-b64c-4b37-b190-633f863ece5c"
-      },
-      {
-        "__uuid__": "6f8b6891-0e26-4cd6-bc7c-b7921871aa5e"
-      },
-      {
-        "__uuid__": "7fb5cabf-0bbb-4774-a1f7-55638fb04e84"
-      }
-    ],
-    "superTile": {
-      "__uuid__": "fdc9d40e-22b1-4a17-b0c4-97c7b40646b5"
-    },
+    "colorsAmount": 5,
     "tilePrefab": {
       "__uuid__": "e3a8c63c-879c-4df9-acb8-05ecea56bafd"
     },

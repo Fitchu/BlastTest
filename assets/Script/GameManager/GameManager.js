@@ -41,7 +41,7 @@ const GameManager = cc.Class({
     event.stopPropagation();
     const score = event.getUserData();
     this.scoreUp(score);
-    if (this._scoreCount < this.totalScore && this._stepsCount >= 0) return;
+    if (this._scoreCount < this.totalScore && this._stepsCount > 0) return;
     this._sceneManager.loadGameOver(this.getResult());
   },
 
